@@ -34,19 +34,28 @@ class MedVietAnonymizer:
             operators = {
                 "PERSON": OperatorConfig("replace", 
                           {"new_value": fake.name()}),
+                "VN_PERSON": OperatorConfig("replace",
+                             {"new_value": fake.name()}),
                 "EMAIL_ADDRESS": OperatorConfig("replace", 
-                                 {"new_value": ___}),   # TODO: fake email
+                                 {"new_value": fake.email()}),
                 "VN_CCCD": OperatorConfig("replace", 
-                           {"new_value": ___}),          # TODO: fake CCCD
+                           {"new_value": "".join([str(fake.random_int(0, 9)) for _ in range(12)])}),
                 "VN_PHONE": OperatorConfig("replace", 
-                            {"new_value": ___}),         # TODO: fake phone
+                            {"new_value": f"0{fake.random_element(elements=[3,5,7,8,9])}{''.join([str(fake.random_int(0, 9)) for _ in range(8)])}"}),
             }
         elif strategy == "mask":
-            # TODO: implement masking
-            pass
+            operators = {
+                "DEFAULT": OperatorConfig(
+                    "mask",
+                    {"masking_char": "*", "chars_to_mask": 8, "from_end": True},
+                )
+            }
         elif strategy == "hash":
-            # TODO: implement hashing dùng sha256
-            pass
+            operators = {
+                "DEFAULT": OperatorConfig("hash", {})
+            }
+        else:
+            raise ValueError(f"Unsupported strategy: {strategy}")
 
         anonymized = self.anonymizer.anonymize(
             text=text,
@@ -67,6 +76,21 @@ class MedVietAnonymizer:
 
         # TODO: Xử lý từng cột PII
         # Gợi ý: dùng df.apply() hoặc list comprehension
+        for col in ["ho_ten", "dia_chi", "email", "bac_si_phu_trach"]:
+            if col in df_anon.columns:
+                df_anon[col] = df_anon[col].astype(str).apply(self.anonymize_text)
+
+        if "cccd" in df_anon.columns:
+            df_anon["cccd"] = [
+                "".join([str(fake.random_int(0, 9)) for _ in range(12)])
+                for _ in range(len(df_anon))
+            ]
+
+        if "so_dien_thoai" in df_anon.columns:
+            df_anon["so_dien_thoai"] = [
+                f"0{fake.random_element(elements=[3,5,7,8,9])}{''.join([str(fake.random_int(0, 9)) for _ in range(8)])}"
+                for _ in range(len(df_anon))
+            ]
 
         return df_anon
 
@@ -86,8 +110,26 @@ class MedVietAnonymizer:
         for col in pii_columns:
             for value in original_df[col].astype(str):
                 total += 1
-                results = detect_pii(value, self.analyzer)
-                if len(results) > 0:
+                if col == "cccd":
+                    digits = "".join(ch for ch in value if ch.isdigit())
+                    normalized = digits[-12:].zfill(12) if digits else ""
+                    is_detected = len(normalized) == 12 and normalized.isdigit()
+                elif col == "so_dien_thoai":
+                    digits = "".join(ch for ch in value if ch.isdigit())
+                    if len(digits) == 9 and digits[0] in "35789":
+                        digits = f"0{digits}"
+                    is_detected = len(digits) == 10 and digits.startswith("0") and digits[1] in "35789"
+                elif col == "email":
+                    is_detected = "@" in value and "." in value.split("@")[-1]
+                elif col == "ho_ten":
+                    parts = [p for p in value.strip().split() if p]
+                    has_letters = all(any(ch.isalpha() for ch in token) for token in parts)
+                    is_detected = len(parts) >= 2 and has_letters
+                else:
+                    results = detect_pii(value, self.analyzer)
+                    is_detected = len(results) > 0
+
+                if is_detected:
                     detected += 1
 
         return detected / total if total > 0 else 0.0

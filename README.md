@@ -68,15 +68,15 @@ def generate_patients(n=200):
         records.append({
             "patient_id": fake.uuid4(),
             "ho_ten": fake.name(),
-            "cccd": f"{random.randint(0,9)}" + 
+            "cccd": f"{random.randint(0,9)}" +
                     "".join([str(random.randint(0,9)) for _ in range(11)]),
             "ngay_sinh": fake.date_of_birth(minimum_age=18, maximum_age=90)
                               .strftime("%d/%m/%Y"),
-            "so_dien_thoai": f"0{random.choice([3,5,7,8,9])}" + 
+            "so_dien_thoai": f"0{random.choice([3,5,7,8,9])}" +
                               "".join([str(random.randint(0,9)) for _ in range(8)]),
             "email": fake.email(),
             "dia_chi": fake.address(),
-            "benh": random.choice(["Tiểu đường", "Huyết áp cao", 
+            "benh": random.choice(["Tiểu đường", "Huyết áp cao",
                                    "Tim mạch", "Khỏe mạnh"]),
             "ket_qua_xet_nghiem": round(random.uniform(3.5, 12.0), 2),
             "bac_si_phu_trach": fake.name(),
@@ -146,7 +146,7 @@ def build_vietnamese_analyzer() -> AnalyzerEngine:
     # Tạo NLP engine dùng spaCy Vietnamese model
     provider = NlpEngineProvider(nlp_configuration={
         "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "vi", 
+        "models": [{"lang_code": "vi",
                     "model_name": "___"}]   # TODO: điền model name
     })
     nlp_engine = provider.create_engine()
@@ -213,13 +213,13 @@ class MedVietAnonymizer:
 
         if strategy == "replace":
             operators = {
-                "PERSON": OperatorConfig("replace", 
+                "PERSON": OperatorConfig("replace",
                           {"new_value": fake.name()}),
-                "EMAIL_ADDRESS": OperatorConfig("replace", 
+                "EMAIL_ADDRESS": OperatorConfig("replace",
                                  {"new_value": ___}),   # TODO: fake email
-                "VN_CCCD": OperatorConfig("replace", 
+                "VN_CCCD": OperatorConfig("replace",
                            {"new_value": ___}),          # TODO: fake CCCD
-                "VN_PHONE": OperatorConfig("replace", 
+                "VN_PHONE": OperatorConfig("replace",
                             {"new_value": ___}),         # TODO: fake phone
             }
         elif strategy == "mask":
@@ -251,7 +251,7 @@ class MedVietAnonymizer:
 
         return df_anon
 
-    def calculate_detection_rate(self, 
+    def calculate_detection_rate(self,
                                   original_df: pd.DataFrame,
                                   pii_columns: list) -> float:
         """
@@ -334,6 +334,7 @@ class TestAnonymization:
 ```
 
 **Chạy test:**
+
 ```bash
 pytest tests/test_pii.py -v --tb=short
 ```
@@ -526,6 +527,7 @@ async def health():
 ```
 
 **Chạy và test:**
+
 ```bash
 uvicorn src.api.main:app --reload
 
@@ -561,7 +563,7 @@ from cryptography.hazmat.backends import default_backend
 class SimpleVault:
     """
     Mô phỏng envelope encryption pattern (thay thế AWS KMS cho local dev).
-    
+
     Architecture:
         Master Key (KEK) → encrypts → Data Key (DEK) → encrypts → Data
     """
@@ -572,7 +574,7 @@ class SimpleVault:
 
     def _load_or_create_kek(self) -> bytes:
         """
-        TODO: Load KEK từ file nếu tồn tại, 
+        TODO: Load KEK từ file nếu tồn tại,
               ngược lại generate 32-byte random key và lưu vào file.
         QUAN TRỌNG: Trong production, KEK phải lưu trong HSM/KMS, không phải file.
         """
@@ -617,7 +619,7 @@ class SimpleVault:
         2. Encrypt data bằng plaintext DEK
         3. Xóa plaintext DEK khỏi memory
         4. Trả về dict chứa encrypted_dek và ciphertext (base64 encoded)
-        
+
         Return format:
         {
             "encrypted_dek": "<base64>",
@@ -676,6 +678,7 @@ class SimpleVault:
 ```
 
 **Test encryption:**
+
 ```python
 # Chạy trong Python shell
 from src.encryption.vault import SimpleVault
@@ -935,6 +938,7 @@ deny if {
 ```
 
 **Test OPA policy:**
+
 ```bash
 # Cài OPA
 brew install opa
@@ -958,34 +962,40 @@ Tạo file `compliance_checklist.md`:
 # NĐ13/2023 Compliance Checklist — MedViet AI Platform
 
 ## A. Data Localization
+
 - [ ] Tất cả patient data lưu trên servers đặt tại Việt Nam
 - [ ] Backup cũng phải ở trong lãnh thổ VN
 - [ ] Log việc transfer data ra ngoài nếu có
 
 ## B. Explicit Consent
+
 - [ ] Thu thập consent trước khi dùng data cho AI training
 - [ ] Có mechanism để user rút consent (Right to Erasure)
 - [ ] Lưu consent record với timestamp
 
 ## C. Breach Notification (72h)
+
 - [ ] Có incident response plan
 - [ ] Alert tự động khi phát hiện breach
 - [ ] Quy trình báo cáo đến cơ quan có thẩm quyền trong 72h
 
 ## D. DPO Appointment
+
 - [ ] Đã bổ nhiệm Data Protection Officer
-- [ ] DPO có thể liên hệ tại: ___
+- [ ] DPO có thể liên hệ tại: \_\_\_
 
 ## E. Technical Controls (mapping từ requirements)
-| NĐ13 Requirement | Technical Control | Status | Owner |
-|-----------------|-------------------|--------|-------|
-| Data minimization | PII anonymization pipeline (Presidio) | ✅ Done | AI Team |
-| Access control | RBAC (Casbin) + ABAC (OPA) | ✅ Done | Platform Team |
-| Encryption | AES-256 at rest, TLS 1.3 in transit | 🚧 In Progress | Infra Team |
-| Audit logging | CloudTrail + API access logs | ⬜ Todo | Platform Team |
-| Breach detection | Anomaly monitoring (Prometheus) | ⬜ Todo | Security Team |
+
+| NĐ13 Requirement  | Technical Control                     | Status         | Owner         |
+| ----------------- | ------------------------------------- | -------------- | ------------- |
+| Data minimization | PII anonymization pipeline (Presidio) | ✅ Done        | AI Team       |
+| Access control    | RBAC (Casbin) + ABAC (OPA)            | ✅ Done        | Platform Team |
+| Encryption        | AES-256 at rest, TLS 1.3 in transit   | 🚧 In Progress | Infra Team    |
+| Audit logging     | CloudTrail + API access logs          | ⬜ Todo        | Platform Team |
+| Breach detection  | Anomaly monitoring (Prometheus)       | ⬜ Todo        | Security Team |
 
 ## F. TODO: Điền vào phần còn thiếu
+
 Với mỗi row còn "⬜ Todo", mô tả technical solution cụ thể bạn sẽ implement.
 ```
 
@@ -993,14 +1003,14 @@ Với mỗi row còn "⬜ Todo", mô tả technical solution cụ thể bạn s�
 
 ## Deliverables & Chấm Điểm
 
-| Hạng mục | Điểm | Tiêu chí |
-|---------|------|---------|
-| **PII Detection** | 25đ | Detection rate ≥ 95% trên test data; CCCD + phone + email đều detect được |
-| **Anonymization** | 20đ | PII gốc không còn trong output; non-PII columns giữ nguyên |
-| **RBAC API** | 20đ | 3 roles hoạt động đúng; 403 đúng chỗ; tests pass |
-| **Encryption** | 15đ | Envelope encryption round-trip thành công; không lưu plaintext key |
-| **Security Audit** | 10đ | git-secrets hook chặn được credential; Bandit report có |
-| **Compliance Checklist** | 10đ | NĐ13 mapping đầy đủ, technical controls cụ thể |
+| Hạng mục                 | Điểm | Tiêu chí                                                                  |
+| ------------------------ | ---- | ------------------------------------------------------------------------- |
+| **PII Detection**        | 25đ  | Detection rate ≥ 95% trên test data; CCCD + phone + email đều detect được |
+| **Anonymization**        | 20đ  | PII gốc không còn trong output; non-PII columns giữ nguyên                |
+| **RBAC API**             | 20đ  | 3 roles hoạt động đúng; 403 đúng chỗ; tests pass                          |
+| **Encryption**           | 15đ  | Envelope encryption round-trip thành công; không lưu plaintext key        |
+| **Security Audit**       | 10đ  | git-secrets hook chặn được credential; Bandit report có                   |
+| **Compliance Checklist** | 10đ  | NĐ13 mapping đầy đủ, technical controls cụ thể                            |
 
 **Tổng: 100đ** — Pass: ≥ 70đ
 

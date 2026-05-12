@@ -17,7 +17,7 @@
 
 ## D. DPO Appointment
 - [ ] Đã bổ nhiệm Data Protection Officer
-- [ ] DPO có thể liên hệ tại: ___
+- [ ] DPO có thể liên hệ tại: dpo@medviet.vn
 
 ## E. Technical Controls (mapping từ requirements)
 | NĐ13 Requirement | Technical Control | Status | Owner |
@@ -30,3 +30,12 @@
 
 ## F. TODO: Điền vào phần còn thiếu
 Với mỗi row còn "⬜ Todo", mô tả technical solution cụ thể bạn sẽ implement.
+
+- Audit logging:
+	- Thu thập access log tại FastAPI middleware (request_id, user, role, endpoint, status, latency).
+	- Đẩy log sang Loki/CloudWatch theo chuẩn JSON và đặt retention >= 180 ngày.
+	- Tạo dashboard theo dõi truy cập dữ liệu nhạy cảm và alert khi có spike bất thường.
+- Breach detection:
+	- Dùng Prometheus thu thập metrics lỗi auth (401/403), số lần truy cập PII endpoint và tốc độ xuất dữ liệu.
+	- Thiết lập Alertmanager rule: nhiều 403 liên tiếp, tăng đột biến băng thông outbound, hoặc truy cập trái giờ.
+	- Kết nối alert với PagerDuty/Slack để kích hoạt quy trình incident response trong 72h.
