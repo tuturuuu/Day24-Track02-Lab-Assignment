@@ -3,29 +3,37 @@ package medviet.data_access
 import future.keywords.if
 import future.keywords.in
 
-# Default: deny all
+#################################
+# DEFAULT DENY
+#################################
 default allow := false
 
-# Admin được phép tất cả
+#################################
+# ADMIN OVERRIDE (highest privilege)
+#################################
 allow if {
     input.user.role == "admin"
 }
 
-# ML Engineer được đọc training data và model artifacts
+#################################
+# ML ENGINEER RULES
+#################################
 allow if {
     input.user.role == "ml_engineer"
     input.resource in {"training_data", "model_artifacts"}
     input.action in {"read", "write"}
 }
 
-# TODO: ML Engineer KHÔNG được delete production data
+# ML Engineer cannot delete production data
 deny if {
     input.user.role == "ml_engineer"
     input.resource == "production_data"
     input.action == "delete"
 }
 
-# TODO: Data Analyst chỉ được đọc aggregated metrics và viết reports
+#################################
+# DATA ANALYST RULES
+#################################
 allow if {
     input.user.role == "data_analyst"
     input.resource == "aggregated_metrics"
@@ -38,15 +46,27 @@ allow if {
     input.action == "write"
 }
 
-# TODO: Intern chỉ được access sandbox
+#################################
+# INTERN RULES
+#################################
 allow if {
     input.user.role == "intern"
     input.resource == "sandbox_data"
     input.action in {"read", "write"}
 }
 
-# Rule: không ai được export restricted data ra ngoài VN servers
+#################################
+# GLOBAL SECURITY RULE (HARD DENY)
+#################################
 deny if {
     input.data_classification == "restricted"
     input.destination_country != "VN"
+    input.user.role != "admin"
+}
+
+#################################
+# FINAL DECISION (important)
+#################################
+final_allow := allow if {
+    not deny
 }
